@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/services/inventory_service.dart';
 import 'package:open_media_station_audiobook/views/settings.dart';
 import 'package:open_media_station_audiobook/widgets/grid.dart';
 import 'package:open_media_station_base/models/inventory/inventory_item.dart';
+import 'package:open_media_station_base/widgets/app_bar_title.dart';
 
 class Gallery extends StatefulWidget {
   const Gallery({super.key});
@@ -29,10 +31,13 @@ class _GalleryState extends State<Gallery> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
-        title: Text("To be set"),
+        title: AppBarTitle(
+          screenWidth: screenWidth,
+          title: Globals.Title,
+        ),
         automaticallyImplyLeading: false,
         actions: [
-                    IconButton(
+          IconButton(
             onPressed: () => {
               Navigator.push(
                 context,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/services/inventory_service.dart';
+import 'package:open_media_station_audiobook/views/audiobook_detail_view.dart';
 import 'package:open_media_station_audiobook/widgets/grid_item.dart';
 import 'package:open_media_station_base/models/inventory/inventory_item.dart';
 
@@ -16,7 +17,7 @@ class Grid extends StatelessWidget {
     int crossAxisCount = (screenWidth / desiredItemWidth).floor();
     double gridMainAxisSpacing = 8.0;
     double gridCrossAxisSpacing = 8.0;
-    double gridItemAspectRatio = 0.6;
+    double gridItemAspectRatio = 0.85;
 
     return GridView.builder(
       itemCount: inventoryItems.length,
@@ -52,25 +53,21 @@ class Grid extends StatelessWidget {
             return InkWell(
               child: GridItem(
                 item: gridItem,
+                desiredItemWidth: desiredItemWidth,
               ),
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) {
-                //     if (filteredItems[index].category == "Movie") {
-                //       return MovieDetailView(
-                //         itemModel: gridItem,
-                //       );
-                //     }
-                //     if (filteredItems[index].category == "Show") {
-                //       return ShowDetailView(
-                //         itemModel: gridItem,
-                //       );
-                //     }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                    if (inventoryItems[index].category == "Audiobook") {
+                      return AudiobookDetailView(
+                        gridItem: gridItem,
+                      );
+                    }
 
-                //     throw ArgumentError("Server models not correct");
-                //   }),
-                // );
+                    throw ArgumentError("Server models not correct");
+                  }),
+                );
               },
             );
           },
