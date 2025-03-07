@@ -1,46 +1,188 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/apis/base_api.dart';
+import 'package:open_media_station_base/helpers/preferences.dart';
 
 class AudiobookPlayer extends StatefulWidget {
   const AudiobookPlayer({
-    super.key,
-    required this.url,
-  });
+    Key? key,
+    required this.itemModel,
+    required this.versionID,
+  }) : super(key: key);
 
-  final String url;
+  final GridItemModel itemModel;
+  final String? versionID;
 
   @override
   State<AudiobookPlayer> createState() => _AudiobookPlayerState();
 }
 
 class _AudiobookPlayerState extends State<AudiobookPlayer> {
-  late final player = Player();
+  late final Player player;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
+  bool _isPlaying = false;
+  Timer? _positionTimer;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: const Placeholder(),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.play_arrow),
-        onPressed: () async {
+  void initState() {
+    super.initState();
+    player = Player();
 
-          await player.open(
-            Media(
-              widget.url,
-              httpHeaders: BaseApi.getHeaders(),
-            ),
-          );
-          await player.play();
-        },
+    String url =
+        "${Preferences.prefs?.getString("BaseUrl")}/stream/${widget.itemModel.inventoryItem?.category}/${widget.itemModel.inventoryItem?.id}${widget.versionID != null ? "?versionId=${widget.versionID}" : ""}";
+
+    player.open(
+      Media(
+        url,
+        httpHeaders: BaseApi.getHeaders(),
       ),
+      play: false,
     );
+
+    // Periodically update the current playback position.
+    _positionTimer =
+        Timer.periodic(const Duration(milliseconds: 500), (_) async {
+      final position = player.state.position;
+      setState(() {
+        _currentPosition = position;
+      });
+    });
+  }
+
+  // Call after opening media to update the total duration.
+  Future<void> _updateDuration() async {
+    var duration = player.state.duration;
+
+    while (duration == const Duration(seconds: 0)) {
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      duration = player.state.duration;
+    }
+
+    setState(() {
+      _totalDuration = duration;
+    });
+  }
+
+  // Formats a Duration into a string (e.g., 00:02:15 or 02:15).
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = d.inHours;
+    final minutes = twoDigits(d.inMinutes.remainder(60));
+    final seconds = twoDigits(d.inSeconds.remainder(60));
+    return hours > 0
+        ? '${twoDigits(hours)}:$minutes:$seconds'
+        : '$minutes:$seconds';
   }
 
   @override
   void dispose() {
+    _positionTimer?.cancel();
     player.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Audiobook Player"),
+      ),
+      body: Column(
+        children: [
+          // Cover image
+          Expanded(
+            child: Center(
+              child: Image.network(
+                widget.itemModel.image,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          // Seekbar slider
+          Slider(
+            value: _currentPosition.inSeconds.toDouble(),
+            min: 0,
+            max: _totalDuration.inSeconds.toDouble() > 0
+                ? _totalDuration.inSeconds.toDouble()
+                : 1,
+            onChanged: (value) async {
+              final newPosition = Duration(seconds: value.toInt());
+              await player.seek(newPosition);
+              setState(() {
+                _currentPosition = newPosition;
+              });
+            },
+          ),
+          // Current position / Total duration labels
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_formatDuration(_currentPosition)),
+                Text(_formatDuration(_totalDuration)),
+              ],
+            ),
+          ),
+          // Playback controls: rewind, play/pause, fast-forward.
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.replay_10),
+                  iconSize: 36,
+                  onPressed: () async {
+                    final newPosition =
+                        _currentPosition - const Duration(seconds: 10);
+                    await player.seek(newPosition < Duration.zero
+                        ? Duration.zero
+                        : newPosition);
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    _isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                  ),
+                  iconSize: 64,
+                  onPressed: () async {
+                    if (_isPlaying) {
+                      await player.pause();
+                    } else {
+                      if (_totalDuration == Duration.zero) {
+                        await _updateDuration();
+                      }
+                      await player.play();
+                    }
+                    setState(() {
+                      _isPlaying = !_isPlaying;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.forward_10),
+                  iconSize: 36,
+                  onPressed: () async {
+                    var newPosition =
+                        _currentPosition + const Duration(seconds: 10);
+                    if (newPosition > _totalDuration) {
+                      newPosition = _totalDuration;
+                    }
+                    await player.seek(newPosition);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -132,7 +132,10 @@ class AudiobookDetailContent extends StatelessWidget {
                     valueListenable: selectedVersionID,
                     builder: (context, versionID, __) {
                       return PlayButton(
-                        child: AudiobookPlayer(url: "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel.inventoryItem?.category}/${itemModel.inventoryItem?.id}${versionID != null ? "?versionId=$versionID" : ""}"),
+                        child: AudiobookPlayer(
+                          itemModel: itemModel,
+                          versionID: versionID,
+                        ),
                       );
                     }),
                 const SizedBox(height: 8),
