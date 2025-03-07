@@ -12,7 +12,10 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   icons_plus: ^5.0.0
-  open_media_station_base: ^0.0.4
+  media_kit: ^1.1.11 # Primary package.
+  media_kit_libs_audio: ^1.0.5 # Native audio dependencies.
+  open_media_station_base: ^0.0.5
+    # path: ../open_media_station_base
 
 dev_dependencies:
   flutter_test:

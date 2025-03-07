@@ -3,6 +3,7 @@ import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/views/audiobook_player.dart';
 import 'package:open_media_station_base/apis/file_info_api.dart';
+import 'package:open_media_station_base/helpers/preferences.dart';
 import 'package:open_media_station_base/models/file_info/file_info.dart';
 import 'package:open_media_station_base/widgets/custom_image.dart';
 import 'package:open_media_station_base/widgets/play_button.dart';
@@ -130,8 +131,8 @@ class AudiobookDetailContent extends StatelessWidget {
                 ValueListenableBuilder(
                     valueListenable: selectedVersionID,
                     builder: (context, versionID, __) {
-                      return const PlayButton(
-                        child: AudiobookPlayer(),
+                      return PlayButton(
+                        child: AudiobookPlayer(url: "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel.inventoryItem?.category}/${itemModel.inventoryItem?.id}${versionID != null ? "?versionId=$versionID" : ""}"),
                       );
                     }),
                 const SizedBox(height: 8),
