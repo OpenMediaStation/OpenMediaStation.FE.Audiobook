@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=OMS - OpenMediaStation
+Comment=Audiobook client for OMS
+Categories=AudioVideo;TV;
+
+Icon=org.openmediastation.audiobook
+Exec=open_media_station_audiobook
+Terminal=false
