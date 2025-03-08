@@ -4,6 +4,7 @@ import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
 import 'package:open_media_station_base/apis/base_api.dart';
+import 'package:open_media_station_base/apis/file_info_api.dart';
 import 'package:open_media_station_base/apis/progress_api.dart';
 import 'package:open_media_station_base/models/progress/progress.dart';
 import 'package:rxdart/rxdart.dart';
@@ -37,7 +38,10 @@ class AudioPlayerHandler extends BaseAudioHandler
 
     // if using media kit we are blind here...
     if (duration == const Duration(seconds: 0)) {
-      duration = const Duration(days: 10);
+      var fileInfo = await FileInfoApi.getFileInfo(
+          itemModel!.inventoryItem!.category,
+          itemModel.inventoryItem!.versions?.first.fileInfoId ?? "");
+      duration = fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format.duration;
     }
 
     final item = MediaItem(

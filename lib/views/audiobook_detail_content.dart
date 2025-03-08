@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:open_media_station_audiobook/extensions/file_info_box_creator.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/views/audiobook_player.dart';
 import 'package:open_media_station_base/apis/file_info_api.dart';
-import 'package:open_media_station_base/helpers/preferences.dart';
 import 'package:open_media_station_base/models/file_info/file_info.dart';
 import 'package:open_media_station_base/widgets/custom_image.dart';
+import 'package:open_media_station_base/widgets/file_info_row.dart';
 import 'package:open_media_station_base/widgets/play_button.dart';
 
 class AudiobookDetailContent extends StatelessWidget {
@@ -121,8 +122,8 @@ class AudiobookDetailContent extends StatelessWidget {
                               return const Text("");
                             }
 
-                            return Placeholder();
-                            // return FileInfoRow(fileInfo: snapshot.data!);
+                            return FileInfoRow(
+                                fileInfoBoxes: snapshot.data!.createBoxes());
                           });
                     }),
                 const SizedBox(
@@ -140,7 +141,7 @@ class AudiobookDetailContent extends StatelessWidget {
                     }),
                 const SizedBox(height: 8),
                 Text(
-                  itemModel.metadataModel?.movie?.plot ?? "",
+                  itemModel.metadataModel?.audiobook?.description ?? "",
                   style: const TextStyle(fontSize: 16, height: 1.5),
                 ),
               ],
