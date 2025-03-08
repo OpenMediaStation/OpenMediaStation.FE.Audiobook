@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
+import 'package:open_media_station_audiobook/models/internal/media_state.dart';
 import 'package:open_media_station_base/helpers/preferences.dart';
+import 'package:rxdart/rxdart.dart';
 
 class AudiobookPlayer extends StatefulWidget {
   const AudiobookPlayer({
@@ -19,12 +23,6 @@ class AudiobookPlayer extends StatefulWidget {
 }
 
 class _AudiobookPlayerState extends State<AudiobookPlayer> {
-  late StreamSubscription<Duration> _positionSubscription;
-
-  Duration _currentPosition = Duration.zero;
-  Duration _totalDuration = Duration.zero;
-  bool _isPlaying = false;
-
   @override
   void initState() {
     super.initState();
@@ -36,49 +34,10 @@ class _AudiobookPlayerState extends State<AudiobookPlayer> {
         "${Preferences.prefs?.getString("BaseUrl")}/stream/${widget.itemModel.inventoryItem?.category}/${widget.itemModel.inventoryItem?.id}${widget.versionID != null ? "?versionId=${widget.versionID}" : ""}";
 
     await Globals.audioPlayer.initializePlayer(widget.itemModel, url);
-
-    _positionSubscription =
-        Globals.audioPlayer.player.stream.position.listen((duration) async {
-      // Set position for progress bar
-      Duration totalDuration = _totalDuration;
-      if (_totalDuration == const Duration(seconds: 0)) {
-        totalDuration = await _getTotalDuration();
-      }
-
-      setState(() {
-        _totalDuration = totalDuration;
-        _currentPosition = duration;
-      });
-    });
-  }
-
-  // Call after opening media to update the total duration.
-  Future<Duration> _getTotalDuration() async {
-    var duration = Globals.audioPlayer.player.state.duration;
-
-    while (duration == const Duration(seconds: 0)) {
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      duration = Globals.audioPlayer.player.state.duration;
-    }
-
-    return duration;
-  }
-
-  // Formats a Duration into a string (e.g., 00:02:15 or 02:15).
-  String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = d.inHours;
-    final minutes = twoDigits(d.inMinutes.remainder(60));
-    final seconds = twoDigits(d.inSeconds.remainder(60));
-    return hours > 0
-        ? '${twoDigits(hours)}:$minutes:$seconds'
-        : '$minutes:$seconds';
   }
 
   @override
   void dispose() {
-    _positionSubscription.cancel();
     super.dispose();
   }
 
@@ -88,95 +47,87 @@ class _AudiobookPlayerState extends State<AudiobookPlayer> {
       appBar: AppBar(
         title: const Text("Audiobook Player"),
       ),
-      body: Column(
-        children: [
-          // Cover image
-          Expanded(
-            child: Center(
-              child: Image.network(
-                widget.itemModel.image,
-                fit: BoxFit.cover,
-              ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Show media item title
+            StreamBuilder<MediaItem?>(
+              stream: Globals.audioPlayer.mediaItem,
+              builder: (context, snapshot) {
+                final mediaItem = snapshot.data;
+                return Text(mediaItem?.title ?? '');
+              },
             ),
-          ),
-          // Seekbar slider
-          Slider(
-            value: _currentPosition.inSeconds.toDouble(),
-            min: 0,
-            max: _totalDuration.inSeconds.toDouble() > 0
-                ? _totalDuration.inSeconds.toDouble()
-                : 1,
-            onChanged: (value) async {
-              final newPosition = Duration(seconds: value.toInt());
-              await Globals.audioPlayer.seek(newPosition);
-              setState(() {
-                _currentPosition = newPosition;
-              });
-            },
-          ),
-          // Current position / Total duration labels
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(_formatDuration(_currentPosition)),
-                Text(_formatDuration(_totalDuration)),
-              ],
+            // Play/pause/stop buttons.
+            StreamBuilder<bool>(
+              stream: Globals.audioPlayer.playbackState
+                  .map((state) => state.playing)
+                  .distinct(),
+              builder: (context, snapshot) {
+                final playing = snapshot.data ?? false;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _button(Icons.fast_rewind, Globals.audioPlayer.rewind),
+                    if (playing)
+                      _button(Icons.pause, Globals.audioPlayer.pause)
+                    else
+                      _button(Icons.play_arrow, Globals.audioPlayer.play),
+                    _button(Icons.stop, Globals.audioPlayer.stop),
+                    _button(
+                        Icons.fast_forward, Globals.audioPlayer.fastForward),
+                  ],
+                );
+              },
             ),
-          ),
-          // Playback controls: rewind, play/pause, fast-forward.
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.replay_10),
-                  iconSize: 36,
-                  onPressed: () async {
-                    final newPosition =
-                        _currentPosition - const Duration(seconds: 10);
-                    await Globals.audioPlayer.seek(newPosition < Duration.zero
-                        ? Duration.zero
-                        : newPosition);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                  ),
-                  iconSize: 64,
-                  onPressed: () async {
-                    if (_isPlaying) {
-                      await Globals.audioPlayer.pause();
-                    } else {
-                      await Globals.audioPlayer.play();
-                    }
-                    setState(() {
-                      _isPlaying = !_isPlaying;
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.forward_10),
-                  iconSize: 36,
-                  onPressed: () async {
-                    var newPosition =
-                        _currentPosition + const Duration(seconds: 10);
-                    if (newPosition > _totalDuration) {
-                      newPosition = _totalDuration;
-                    }
+            // A seek bar.
+            StreamBuilder<MediaState>(
+              stream: _mediaStateStream,
+              builder: (context, snapshot) {
+                final mediaState = snapshot.data;
+                return Slider(
+                  value: (mediaState?.position ?? Duration.zero).inSeconds.toDouble(),
+                  min: 0,
+                  max: (mediaState?.mediaItem?.duration ?? Duration.zero).inSeconds.toDouble() > 0
+                      ? (mediaState?.mediaItem?.duration ?? Duration.zero).inSeconds.toDouble()
+                      : 1,
+                  onChanged: (value) async {
+                    final newPosition = Duration(seconds: value.toInt());
                     await Globals.audioPlayer.seek(newPosition);
                   },
-                ),
-              ],
+                );
+              },
             ),
-          ),
-        ],
+            // Display the processing state.
+            StreamBuilder<AudioProcessingState>(
+              stream: Globals.audioPlayer.playbackState
+                  .map((state) => state.processingState)
+                  .distinct(),
+              builder: (context, snapshot) {
+                final processingState =
+                    snapshot.data ?? AudioProcessingState.idle;
+                return Text(
+                    "Processing state: ${describeEnum(processingState)}");
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  /// A stream reporting the combined state of the current media item and its
+  /// current position.
+  Stream<MediaState> get _mediaStateStream =>
+      Rx.combineLatest2<MediaItem?, Duration, MediaState>(
+          Globals.audioPlayer.mediaItem,
+          AudioService.position,
+          (mediaItem, position) => MediaState(mediaItem, position));
+
+  IconButton _button(IconData iconData, VoidCallback onPressed) => IconButton(
+        icon: Icon(iconData),
+        iconSize: 64.0,
+        onPressed: onPressed,
+      );
 }

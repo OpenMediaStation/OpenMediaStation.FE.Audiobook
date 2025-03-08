@@ -360,6 +360,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
+  just_audio:
+    dependency: "direct main"
+    description:
+      name: just_audio
+      sha256: f978d5b4ccea08f267dae0232ec5405c1b05d3f3cd63f82097ea46c015d5c09e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.46"
+  just_audio_media_kit:
+    dependency: "direct main"
+    description:
+      name: just_audio_media_kit
+      sha256: "9f3517213dfc7bbaf6980656feb66c35600f114c7efc0b5b3f4476cd5c18b45e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.6"
+  just_audio_platform_interface:
+    dependency: transitive
+    description:
+      name: just_audio_platform_interface
+      sha256: "271b93b484c6f494ecd72a107fffbdb26b425f170c665b9777a0a24a726f2f24"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.4.0"
+  just_audio_web:
+    dependency: transitive
+    description:
+      name: just_audio_web
+      sha256: "58915be64509a7683c44bf11cd1a23c15a48de104927bee116e3c63c8eeea0d4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.14"
   leak_tracker:
     dependency: transitive
     description:
@@ -392,6 +424,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  logging:
+    dependency: transitive
+    description:
+      name: logging
+      sha256: c8245ada5f1717ed44271ed1c26b8ce85ca3228fd2ffdb75468ab01979309d61
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   matcher:
     dependency: transitive
     description:
@@ -409,66 +449,26 @@ packages:
     source: hosted
     version: "0.11.1"
   media_kit:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: media_kit
       sha256: "1f1deee148533d75129a6f38251ff8388e33ee05fc2d20a6a80e57d6051b7b62"
       url: "https://pub.dev"
     source: hosted
     version: "1.1.11"
-  media_kit_libs_android_audio:
-    dependency: transitive
-    description:
-      name: media_kit_libs_android_audio
-      sha256: "3d2df5c09d3f3ff7c55b53bf955e46712f76483e77562a5a017439a3ea85ce88"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.6"
-  media_kit_libs_audio:
-    dependency: "direct main"
-    description:
-      name: media_kit_libs_audio
-      sha256: be40e17c4cb7bd4e14114dce24a36e645f2ac5989dda543deaba2e7873901ba0
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.5"
-  media_kit_libs_ios_audio:
-    dependency: transitive
-    description:
-      name: media_kit_libs_ios_audio
-      sha256: "78ccf04e27d6b4ba00a355578ccb39b772f00d48269a6ac3db076edf2d51934f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.4"
   media_kit_libs_linux:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: media_kit_libs_linux
       sha256: e186891c31daa6bedab4d74dcdb4e8adfccc7d786bfed6ad81fe24a3b3010310
       url: "https://pub.dev"
     source: hosted
     version: "1.1.3"
-  media_kit_libs_macos_audio:
-    dependency: transitive
-    description:
-      name: media_kit_libs_macos_audio
-      sha256: "3be21844df98f286de32808592835073cdef2c1a10078bac135da790badca950"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.4"
   media_kit_libs_windows_audio:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: media_kit_libs_windows_audio
       sha256: c2fd558cc87b9d89a801141fcdffe02e338a3b21a41a18fbd63d5b221a1b8e53
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.9"
-  media_kit_native_event_loop:
-    dependency: transitive
-    description:
-      name: media_kit_native_event_loop
-      sha256: "7d82e3b3e9ded5c35c3146c5ba1da3118d1dd8ac3435bac7f29f458181471b40"
       url: "https://pub.dev"
     source: hosted
     version: "1.0.9"
@@ -657,7 +657,7 @@ packages:
     source: hosted
     version: "2.3.1"
   rxdart:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: rxdart
       sha256: "5c3004a4a8dbb94bd4bf5412a4def4acdaa12e12f269737a5751369e12d1a962"

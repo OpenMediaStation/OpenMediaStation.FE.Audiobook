@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/handlers/audio_handler.dart';
 import 'package:open_media_station_audiobook/views/gallery.dart';
@@ -10,7 +10,14 @@ import 'package:open_media_station_base/helpers/app_helper.dart';
 
 Future main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
+
+  JustAudioMediaKit.ensureInitialized(
+      linux: true,            // default: true  - dependency: media_kit_libs_linux
+      windows: true,          // default: true  - dependency: media_kit_libs_windows_audio
+      android: false,          // default: false - dependency: media_kit_libs_android_audio
+      iOS: false,              // default: false - dependency: media_kit_libs_ios_audio
+      macOS: false,            // default: false - dependency: media_kit_libs_macos_audio
+  );
 
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
@@ -25,7 +32,7 @@ Future main(List<String> args) async {
   }
 
   Globals.audioPlayer = await AudioService.init(
-    builder: () => AudioPlayer(),
+    builder: () => AudioPlayerHandler(),
     config: const AudioServiceConfig(
       androidNotificationChannelId:
           'org.openmediastation.audiobook.channel.audio',
