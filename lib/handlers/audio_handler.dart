@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
 import 'package:open_media_station_base/apis/base_api.dart';
@@ -22,6 +23,11 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> playFromUri(Uri uri, [Map<String, dynamic>? extras]) async {
+    await _playFromUri(uri, null, extras);
+  }
+
+  Future<void> _playFromUri(Uri uri, GridItemModel? itemModel,
+      [Map<String, dynamic>? extras]) async {
     var duration = await player.setAudioSource(
       AudioSource.uri(
         uri,
@@ -35,13 +41,13 @@ class AudioPlayerHandler extends BaseAudioHandler
     }
 
     final item = MediaItem(
-      id: 'https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3',
-      album: "Science Friday",
-      title: "A Salute To Head-Scratching Science",
-      artist: "Science Friday and WNYC Studios",
+      id: uri.toString(),
+      title: itemModel?.metadataModel?.title ?? "Unknown title",
+      artist: itemModel?.metadataModel?.audiobook?.authors?.first ??
+          "Unknown author",
       duration: duration,
-      artUri: Uri.parse(
-          'https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg'),
+      artUri: Uri.parse(itemModel?.image ?? Globals.PictureNotFoundUrl),
+      artHeaders: BaseApi.getHeaders(),
     );
 
     mediaItem.add(item);
@@ -63,7 +69,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   }
 
   Future<void> initializePlayer(GridItemModel itemModel, String url) async {
-    await playFromUri(Uri.parse(url));
+    await _playFromUri(Uri.parse(url), itemModel);
 
     // Handle progress
     int? lastUpdatedSecond;
