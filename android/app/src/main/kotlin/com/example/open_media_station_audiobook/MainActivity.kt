@@ -1,4 +1,4 @@
-package com.example.open_media_station_audiobook
+package org.openmediastation.audiobook
 
 import io.flutter.embedding.android.FlutterActivity
 
