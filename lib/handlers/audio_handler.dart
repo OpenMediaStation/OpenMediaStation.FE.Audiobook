@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_media_station_audiobook/globals.dart';
@@ -12,6 +14,8 @@ import 'package:rxdart/rxdart.dart';
 class AudioPlayerHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   final player = AudioPlayer();
+  StreamSubscription<MediaState>? _streamSubscription;
+  MediaItem? _mediaItem;
 
   AudioPlayerHandler() {
     player.playbackEventStream.map(_transformEvent).pipe(playbackState);
@@ -41,10 +45,11 @@ class AudioPlayerHandler extends BaseAudioHandler
       var fileInfo = await FileInfoApi.getFileInfo(
           itemModel!.inventoryItem!.category,
           itemModel.inventoryItem!.versions?.first.fileInfoId ?? "");
-      duration = fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format.duration;
+      duration =
+          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format.duration;
     }
 
-    final item = MediaItem(
+    _mediaItem = MediaItem(
       id: uri.toString(),
       title: itemModel?.metadataModel?.title ?? "Unknown title",
       artist: itemModel?.metadataModel?.audiobook?.authors?.first ??
@@ -54,7 +59,7 @@ class AudioPlayerHandler extends BaseAudioHandler
       artHeaders: BaseApi.getHeaders(),
     );
 
-    mediaItem.add(item);
+    mediaItem.add(_mediaItem);
   }
 
   @override
@@ -73,6 +78,10 @@ class AudioPlayerHandler extends BaseAudioHandler
   }
 
   Future<void> initializePlayer(GridItemModel itemModel, String url) async {
+    if (url == _mediaItem?.id) {
+      return;
+    }
+
     await _playFromUri(Uri.parse(url), itemModel);
 
     // Handle progress
@@ -80,7 +89,11 @@ class AudioPlayerHandler extends BaseAudioHandler
     bool finished = false;
     bool initialRun = true;
 
-    var streamSubscription = _mediaStateStream.listen((mediaState) async {
+    if (_streamSubscription != null) {
+      _streamSubscription!.cancel();
+    }
+
+    _streamSubscription = _mediaStateStream.listen((mediaState) async {
       var positionInSeconds = mediaState.position.inSeconds;
       var durationInSeconds = mediaState.mediaItem?.duration?.inSeconds ?? 0;
 
