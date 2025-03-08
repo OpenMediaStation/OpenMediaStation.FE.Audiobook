@@ -16,6 +16,8 @@ class AudioPlayerHandler extends BaseAudioHandler
   final player = AudioPlayer();
   StreamSubscription<MediaState>? _streamSubscription;
   MediaItem? _mediaItem;
+  GridItemModel? currentGridItemModel;
+  String? currentUrl;
 
   AudioPlayerHandler() {
     player.playbackEventStream.map(_transformEvent).pipe(playbackState);
@@ -81,6 +83,8 @@ class AudioPlayerHandler extends BaseAudioHandler
     if (url == _mediaItem?.id) {
       return;
     }
+
+    currentGridItemModel = itemModel;
 
     await _playFromUri(Uri.parse(url), itemModel);
 
