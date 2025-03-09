@@ -18,7 +18,7 @@ dependencies:
   media_kit_libs_windows_audio: any
   audio_service: ^0.18.17
   audio_session: ^0.1.25
-  open_media_station_base: ^0.0.6
+  open_media_station_base: ^0.0.7
     # path: ../open_media_station_base
   rxdart: ^0.28.0
 

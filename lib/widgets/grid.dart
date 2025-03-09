@@ -6,20 +6,30 @@ import 'package:open_media_station_audiobook/widgets/grid_item.dart';
 import 'package:open_media_station_base/models/inventory/inventory_item.dart';
 
 class Grid extends StatelessWidget {
-  const Grid({super.key, required this.inventoryItems});
+  const Grid({
+    super.key,
+    required this.inventoryItems,
+    required this.scrollController,
+    required this.desiredItemWidth,
+    required this.crossAxisCount,
+    required this.gridMainAxisSpacing,
+    required this.gridCrossAxisSpacing,
+    required this.gridItemAspectRatio, 
+  });
 
   final List<InventoryItem> inventoryItems;
+  final ScrollController scrollController;
+
+  final double desiredItemWidth;
+  final int crossAxisCount;
+  final double gridMainAxisSpacing;
+  final double gridCrossAxisSpacing;
+  final double gridItemAspectRatio;
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double desiredItemWidth = 150;
-    int crossAxisCount = (screenWidth / desiredItemWidth).floor();
-    double gridMainAxisSpacing = 8.0;
-    double gridCrossAxisSpacing = 8.0;
-    double gridItemAspectRatio = 0.85;
-
     return GridView.builder(
+      controller: scrollController,
       itemCount: inventoryItems.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
