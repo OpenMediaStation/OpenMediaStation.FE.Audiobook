@@ -36,8 +36,8 @@ flutter:
 msix_config:
   display_name: Open Media Station - Audiobook
   publisher_display_name: LNA-DEV
-  # publisher: CN=7B47E609-6C44-44B4-9DFA-CF58A4704989
-  # identity_name: 54515LNA-DEV.OpenMediaStation-MovieTV
+  publisher: CN=7B47E609-6C44-44B4-9DFA-CF58A4704989
+  identity_name: 54515LNA-DEV.OpenMediaStation-Audiobook
   msix_version: 0.0.1.0
   store: true
   logo_path: ./AppIcon.png
