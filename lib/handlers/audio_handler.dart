@@ -33,6 +33,11 @@ class AudioPlayerHandler extends BaseAudioHandler
     await _playFromUri(uri, null, extras);
   }
 
+  @override
+  Future<void> setSpeed(double speed) async {
+    await player.setSpeed(speed);
+  }
+
   Future<void> _playFromUri(Uri uri, GridItemModel? itemModel,
       [Map<String, dynamic>? extras]) async {
     var duration = await player.setAudioSource(
