@@ -14,6 +14,7 @@ import 'package:rxdart/rxdart.dart';
 class AudioPlayerHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   final player = AudioPlayer();
+  Timer? _sleepTimer;
   StreamSubscription<MediaState>? _streamSubscription;
   MediaItem? _mediaItem;
   GridItemModel? currentGridItemModel;
@@ -77,6 +78,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   @override
   Future<void> stop() async {
     await player.stop();
+    _sleepTimer?.cancel();
   }
 
   @override
@@ -169,6 +171,19 @@ class AudioPlayerHandler extends BaseAudioHandler
     await player.seek(
       Duration(seconds: itemModel.progress?.progressSeconds ?? 0),
     );
+  }
+
+  /// Sleep timer function
+  void startSleepTimer(Duration duration) {
+    _sleepTimer?.cancel();
+    _sleepTimer = Timer(duration, () {
+      stop();
+    });
+  }
+
+  /// Cancel the sleep timer manually if needed
+  void cancelSleepTimer() {
+    _sleepTimer?.cancel();
   }
 
   Stream<MediaState> get _mediaStateStream =>

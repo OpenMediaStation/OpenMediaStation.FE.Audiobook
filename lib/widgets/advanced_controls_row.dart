@@ -29,7 +29,9 @@ class AdvancedControlsRow extends StatelessWidget {
           IconButton(
             icon: const Icon(Iconsax.moon_outline),
             iconSize: size - 4,
-            onPressed: () async {},
+            onPressed: () async {
+              _showSleeptimerDialog(context);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.list_outlined),
@@ -41,7 +43,6 @@ class AdvancedControlsRow extends StatelessWidget {
     );
   }
 
-  /// Function to show the speed selection dialog
   void _showPlaybackSpeedDialog(BuildContext context) {
     List<double> speeds = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0];
 
@@ -60,6 +61,46 @@ class AdvancedControlsRow extends StatelessWidget {
                   title: Text("${speeds[index]}x"),
                   onTap: () {
                     Globals.audioPlayer.setSpeed(speeds[index]);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSleeptimerDialog(BuildContext context) {
+    List<Duration> durations = [
+      const Duration(minutes: 1),
+      const Duration(minutes: 5),
+      const Duration(minutes: 10),
+      const Duration(minutes: 15),
+      const Duration(minutes: 30),
+      const Duration(minutes: 45),
+      const Duration(hours: 1),
+      const Duration(hours: 1, minutes: 30),
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Set Sleeptimer"),
+          content: SizedBox(
+            width: double.minPositive,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: durations.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(durations[index].inMinutes == 1
+                      ? "${durations[index].inMinutes} minute"
+                      : "${durations[index].inMinutes} minutes"),
+                  onTap: () {
+                    Globals.audioPlayer.startSleepTimer(durations[index]);
                     Navigator.pop(context);
                   },
                 );
