@@ -32,9 +32,13 @@ class _GalleryState extends State<Gallery> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
-        title: AppBarTitle(
-          screenWidth: screenWidth,
-          title: Globals.Title,
+        title: Row(
+          children: [
+            AppBarTitle(
+              screenWidth: screenWidth,
+              title: Globals.Title,
+            ),
+          ],
         ),
         automaticallyImplyLeading: false,
         actions: [
