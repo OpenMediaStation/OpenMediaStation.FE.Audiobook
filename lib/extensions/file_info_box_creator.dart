@@ -9,26 +9,26 @@ extension FileInfoBoxCreator on FileInfo {
 
     var mediaData = this.mediaData;
 
-    var duration = mediaData.duration ?? mediaData.format.duration;
+    var duration = mediaData.duration ?? mediaData.format?.duration;
     if (duration != null) {
       boxes.add(FileInfoBox(duration.toformattedString(), key: GlobalKey(),));
     }
 
     var vStr = mediaData.primaryVideoStream;
 
-    if (vStr.codecName != null || vStr.profile != null) {
-      boxes.add(FileInfoBox(vStr.codecName?.toUpperCase() ?? vStr.profile!, key: GlobalKey(),));
+    if (vStr?.codecName != null || vStr?.profile != null) {
+      boxes.add(FileInfoBox(vStr?.codecName?.toUpperCase() ?? vStr!.profile!, key: GlobalKey(),));
     }
 
-    if (mediaData.audioStreams.isNotEmpty) {
-      for (var aStr in mediaData.audioStreams) {
+    if (mediaData.audioStreams!.isNotEmpty) {
+      for (var aStr in mediaData.audioStreams!) {
         boxes.add(FileInfoBox(
             "${aStr.profile ?? aStr.codecName?.toUpperCase() ?? ""} ${aStr.channelLayout}${" ${aStr.language ?? ""}"}", key: GlobalKey(),));
       }
     }
 
-    if (mediaData.format.formatLongName != null) {
-      boxes.add(FileInfoBox(mediaData.format.formatLongName!, key: GlobalKey(),));
+    if (mediaData.format?.formatLongName != null) {
+      boxes.add(FileInfoBox(mediaData.format!.formatLongName!, key: GlobalKey(),));
     }
 
     return boxes;

@@ -6,7 +6,6 @@ import 'package:open_media_station_audiobook/widgets/advanced_controls_row.dart'
 import 'package:open_media_station_audiobook/widgets/player_content_information.dart';
 import 'package:open_media_station_audiobook/widgets/player_control_row.dart';
 import 'package:open_media_station_audiobook/widgets/seek_bar.dart';
-import 'package:open_media_station_base/helpers/preferences.dart';
 
 class AudiobookPlayer extends StatefulWidget {
   const AudiobookPlayer({
@@ -30,10 +29,7 @@ class _AudiobookPlayerState extends State<AudiobookPlayer> {
   }
 
   Future<void> _initializePlayer() async {
-    String url =
-        "${Preferences.prefs?.getString("BaseUrl")}/stream/${widget.itemModel.inventoryItem?.category}/${widget.itemModel.inventoryItem?.id}${widget.versionID != null ? "?versionId=${widget.versionID}" : ""}";
-
-    await Globals.audioPlayer.initializePlayer(widget.itemModel, url);
+    await Globals.audioPlayer.initializePlayer(widget.itemModel, widget.versionID);
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:open_media_station_audiobook/models/internal/media_state.dart';
 import 'package:open_media_station_base/apis/base_api.dart';
 import 'package:open_media_station_base/apis/file_info_api.dart';
 import 'package:open_media_station_base/apis/progress_api.dart';
+import 'package:open_media_station_base/helpers/preferences.dart';
 import 'package:open_media_station_base/models/progress/progress.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -54,11 +55,100 @@ class AudioPlayerHandler extends BaseAudioHandler
           itemModel!.inventoryItem!.category,
           itemModel.inventoryItem!.versions?.first.fileInfoId ?? "");
       duration =
-          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format.duration;
+          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
     }
 
     _mediaItem = MediaItem(
       id: uri.toString(),
+      title: itemModel?.metadataModel?.title ?? "Unknown title",
+      artist: itemModel?.metadataModel?.audiobook?.authors?.first ??
+          "Unknown author",
+      duration: duration,
+      artUri: Uri.parse(itemModel?.image ?? Globals.PictureNotFoundUrl),
+      artHeaders: BaseApi.getHeaders(),
+    );
+
+    mediaItem.add(_mediaItem);
+  }
+
+  Future<void> _playFromItemModel(
+      GridItemModel? itemModel, String? versionId) async {
+    var version = itemModel?.inventoryItem?.versions
+        ?.where((i) => i.id == versionId)
+        .firstOrNull;
+
+    AudioSource audioSource;
+
+    if (version?.parts == null) {
+      String url =
+          "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel?.inventoryItem?.category}/${itemModel?.inventoryItem?.id}${versionId != null ? "?versionId=$versionId" : ""}";
+
+      audioSource = AudioSource.uri(
+        Uri.parse(url),
+        headers: BaseApi.getHeaders(),
+      );
+    } else {
+      version?.parts?.sort(
+        (i1, i2) {
+          int primaryComparison =
+              i1.primaryIdentifier?.compareTo(i2.primaryIdentifier ?? 0) ?? 0;
+
+          if (primaryComparison != 0) {
+            return primaryComparison;
+          }
+
+          return i1.secondaryIdentifier
+                  ?.compareTo(i2.secondaryIdentifier ?? 0) ??
+              0;
+        },
+      );
+
+      List<AudioSource> sources = [];
+
+      for (var element in version!.parts!) {
+        String url =
+            "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel?.inventoryItem?.category}/${itemModel?.inventoryItem?.id}?partId=${element.id}${versionId != null ? "&versionId=$versionId" : ""}";
+
+        sources.add(
+          AudioSource.uri(
+            Uri.parse(url),
+            headers: BaseApi.getHeaders(),
+          ),
+        );
+      }
+
+      audioSource = ConcatenatingAudioSource(children: sources);
+    }
+
+    var duration = await player.setAudioSource(audioSource);
+
+    // if using media kit we are blind here...
+    if (duration == const Duration(seconds: 0)) {
+      if (version?.parts == null) {
+        var fileInfo = await FileInfoApi.getFileInfo(
+            itemModel!.inventoryItem!.category,
+            itemModel.inventoryItem!.versions?.first.fileInfoId ?? "");
+        duration = fileInfo?.mediaData.duration ??
+            fileInfo?.mediaData.format?.duration;
+      } else {
+        var calculatedDuration = const Duration(hours: 10);
+        // for (var element in version!.parts!) {
+        //   var fileInfo = await FileInfoApi.getFileInfo(
+        //       itemModel!.inventoryItem!.category, element.fileInfoId ?? "");
+        //   var extractedDuration = fileInfo?.mediaData.duration ??
+        //       fileInfo?.mediaData.format?.duration;
+
+        //   if (extractedDuration != null) {
+        //     calculatedDuration += extractedDuration;
+        //   }
+        // }
+
+        duration = calculatedDuration;
+      }
+    }
+
+    _mediaItem = MediaItem(
+      id: version?.id ?? "unknown",
       title: itemModel?.metadataModel?.title ?? "Unknown title",
       artist: itemModel?.metadataModel?.audiobook?.authors?.first ??
           "Unknown author",
@@ -86,14 +176,19 @@ class AudioPlayerHandler extends BaseAudioHandler
     await player.seek(position);
   }
 
-  Future<void> initializePlayer(GridItemModel itemModel, String url) async {
-    if (url == _mediaItem?.id) {
+  Future<void> initializePlayer(
+      GridItemModel itemModel, String? versionId) async {
+    if (itemModel.inventoryItem?.versions
+            ?.where((i) => i.id == versionId)
+            .firstOrNull
+            ?.id ==
+        _mediaItem?.id) {
       return;
     }
 
     currentGridItemModel = itemModel;
 
-    await _playFromUri(Uri.parse(url), itemModel);
+    await _playFromItemModel(itemModel, versionId);
 
     // Handle progress
     int? lastUpdatedSecond;
