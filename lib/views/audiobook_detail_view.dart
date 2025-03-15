@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/services/inventory_service.dart';
 import 'package:open_media_station_audiobook/views/audiobook_detail_content.dart';
 import 'package:open_media_station_audiobook/widgets/mini_audio_player.dart';
+import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/widgets/favorite_button.dart';
 
 class AudiobookDetailView extends StatelessWidget {

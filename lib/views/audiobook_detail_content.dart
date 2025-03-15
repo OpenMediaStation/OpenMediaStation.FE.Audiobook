@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/extensions/file_info_box_creator.dart';
 import 'package:open_media_station_audiobook/globals.dart';
-import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/views/audiobook_player.dart';
 import 'package:open_media_station_base/apis/file_info_api.dart';
 import 'package:open_media_station_base/models/file_info/file_info.dart';
+import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/widgets/custom_image.dart';
 import 'package:open_media_station_base/widgets/file_info_row.dart';
 import 'package:open_media_station_base/widgets/play_button.dart';

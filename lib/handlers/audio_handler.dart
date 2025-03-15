@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_media_station_audiobook/globals.dart';
-import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
 import 'package:open_media_station_base/apis/base_api.dart';
 import 'package:open_media_station_base/apis/file_info_api.dart';
 import 'package:open_media_station_base/apis/progress_api.dart';
 import 'package:open_media_station_base/helpers/preferences.dart';
+import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/models/progress/progress.dart';
 import 'package:rxdart/rxdart.dart';
 

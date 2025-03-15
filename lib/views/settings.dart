@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/globals.dart';
-import 'package:open_media_station_audiobook/views/gallery.dart';
 import 'package:open_media_station_base/helpers/preferences.dart';
 import 'package:open_media_station_base/views/login.dart';
 
@@ -49,7 +48,7 @@ class Settings extends StatelessWidget {
         context,
         MaterialPageRoute(
           builder: (context) => LoginView(
-            widget: const Gallery(),
+            widget: Globals.gallery,
             title: Globals.Title,
           ),
         ),

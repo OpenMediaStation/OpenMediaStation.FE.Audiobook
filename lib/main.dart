@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/handlers/audio_handler.dart';
-import 'package:open_media_station_audiobook/views/gallery.dart';
 import 'package:open_media_station_base/helpers/app_helper.dart';
 
 Future main(List<String> args) async {
@@ -42,5 +41,5 @@ Future main(List<String> args) async {
     ),
   );
 
-  AppHelper.start(args, const Gallery(), "Open Media Station");
+  AppHelper.start(args, Globals.gallery, "Open Media Station");
 }

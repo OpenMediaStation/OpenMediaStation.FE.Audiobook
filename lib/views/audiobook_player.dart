@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/globals.dart';
-import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_audiobook/widgets/advanced_controls_row.dart';
 import 'package:open_media_station_audiobook/widgets/player_content_information.dart';
 import 'package:open_media_station_audiobook/widgets/player_control_row.dart';
 import 'package:open_media_station_audiobook/widgets/seek_bar.dart';
+import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 
 class AudiobookPlayer extends StatefulWidget {
   const AudiobookPlayer({

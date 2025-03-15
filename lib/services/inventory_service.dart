@@ -1,9 +1,9 @@
 import 'package:open_media_station_audiobook/globals.dart';
-import 'package:open_media_station_audiobook/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/apis/favorites_api.dart';
 import 'package:open_media_station_base/apis/inventory_api.dart';
 import 'package:open_media_station_base/apis/metadata_api.dart';
 import 'package:open_media_station_base/apis/progress_api.dart';
+import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/models/inventory/inventory_item.dart';
 import 'package:open_media_station_base/models/metadata/metadata_model.dart';
 import 'package:open_media_station_base/models/progress/progress.dart';
