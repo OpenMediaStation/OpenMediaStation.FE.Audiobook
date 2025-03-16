@@ -1,15 +1,10 @@
 import 'dart:async';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
-import 'package:open_media_station_base/apis/base_api.dart';
-import 'package:open_media_station_base/apis/file_info_api.dart';
-import 'package:open_media_station_base/apis/progress_api.dart';
-import 'package:open_media_station_base/helpers/preferences.dart';
 import 'package:open_media_station_base/models/internal/grid_item_model.dart';
-import 'package:open_media_station_base/models/progress/progress.dart';
+import 'package:open_media_station_base/open_media_station_base.dart';
 import 'package:rxdart/rxdart.dart';
 
 class AudioPlayerHandler extends BaseAudioHandler
@@ -21,6 +16,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   GridItemModel? currentGridItemModel;
   String? currentVersionId;
   String? currentUrl;
+  List<FileInfo> fileInfosForCurrentParts = [];
 
   AudioPlayerHandler() {
     player.playbackEventStream.map(_transformEvent).pipe(playbackState);
@@ -39,6 +35,20 @@ class AudioPlayerHandler extends BaseAudioHandler
   @override
   Future<void> setSpeed(double speed) async {
     await player.setSpeed(speed);
+  }
+
+  @override
+  Future<void> fastForward() async {
+    var position = (await (mediaStateStream.first)).position;
+
+    await seek(position + const Duration(seconds: 10));
+  }
+
+  @override
+  Future<void> rewind() async {
+    var position = (await (mediaStateStream.first)).position;
+
+    await seek(position - const Duration(seconds: 10));
   }
 
   Future<void> _playFromUri(Uri uri, GridItemModel? itemModel,
@@ -79,9 +89,10 @@ class AudioPlayerHandler extends BaseAudioHandler
 
     var calculatedDuration = const Duration();
     for (var element in version!.parts!) {
-      var fileInfo = await FileInfoApi.getFileInfo(
-          currentGridItemModel!.inventoryItem!.category,
-          element.fileInfoId ?? "");
+      var fileInfo = fileInfosForCurrentParts
+          ?.where((i) => i.id == element.fileInfoId)
+          .firstOrNull;
+
       var extractedDuration =
           fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
 
@@ -105,9 +116,10 @@ class AudioPlayerHandler extends BaseAudioHandler
     }
 
     for (var i = 0; i < index; i++) {
-      var fileInfo = await FileInfoApi.getFileInfo(
-          currentGridItemModel!.inventoryItem!.category,
-          version!.parts![i].fileInfoId ?? "");
+      var fileInfo = fileInfosForCurrentParts
+          ?.where((item) => item.id == version!.parts![i].fileInfoId)
+          .firstOrNull;
+
       var extractedDuration =
           fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
 
@@ -117,6 +129,35 @@ class AudioPlayerHandler extends BaseAudioHandler
     }
 
     return calculatedDuration;
+  }
+
+  Future<(int, Duration)> calculateIndexForDuration(Duration duration) async {
+    var version = currentGridItemModel?.inventoryItem?.versions
+        ?.where((i) => i.id == currentVersionId)
+        .firstOrNull;
+
+    var calculatedDuration = const Duration();
+
+    Duration? extractedDuration;
+
+    int index = -1;
+    while (calculatedDuration < duration) {
+      index++;
+      var fileInfo = fileInfosForCurrentParts
+          ?.where((item) => item.id == version!.parts![index].fileInfoId)
+          .firstOrNull;
+      extractedDuration =
+          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
+
+      if (extractedDuration != null) {
+        calculatedDuration += extractedDuration;
+      }
+    }
+
+    var temp = calculatedDuration - duration;
+    var positionInItem = extractedDuration! - temp;
+
+    return (index, positionInItem);
   }
 
   Future<void> _playFromItemModel(
@@ -151,9 +192,17 @@ class AudioPlayerHandler extends BaseAudioHandler
         },
       );
 
+      for (var element in version!.parts!) {
+        var fileInfo = await FileInfoApi.getFileInfo(
+            currentGridItemModel!.inventoryItem!.category,
+            element.fileInfoId ?? "");
+
+        fileInfosForCurrentParts.add(fileInfo!);
+      }
+
       List<AudioSource> sources = [];
 
-      for (var element in version!.parts!) {
+      for (var element in version.parts!) {
         String url =
             "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel?.inventoryItem?.category}/${itemModel?.inventoryItem?.id}?partId=${element.id}${versionId != null ? "&versionId=$versionId" : ""}";
 
@@ -168,16 +217,23 @@ class AudioPlayerHandler extends BaseAudioHandler
       audioSource = ConcatenatingAudioSource(children: sources);
     }
 
-    var calculatedDuration = await calculateDuration();
-
-    var duration = await player.setAudioSource(audioSource);
+    Duration? duration;
 
     if (version?.parts != null) {
+      var calculatedDuration = await calculateDuration();
       duration = calculatedDuration;
     }
 
+    var tempDuration = await player.setAudioSource(audioSource);
+
+    if (tempDuration != null &&
+        tempDuration != const Duration() &&
+        version?.parts == null) {
+      duration = tempDuration;
+    }
+
     // if using media kit we are blind here...
-    if (duration == const Duration(seconds: 0)) {
+    if (duration == const Duration(seconds: 0) || duration == null) {
       if (version?.parts == null) {
         var fileInfo = await FileInfoApi.getFileInfo(
             itemModel!.inventoryItem!.category,
@@ -213,11 +269,22 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
-    await player.seek(position);
+    var version = currentGridItemModel?.inventoryItem?.versions
+        ?.where((i) => i.id == currentVersionId)
+        .firstOrNull;
+
+    if (version?.parts != null) {
+      var (index, indexDuration) = await calculateIndexForDuration(position);
+      await player.seek(index: index, indexDuration);
+    } else {
+      await player.seek(position);
+    }
   }
 
   Future<void> initializePlayer(
-      GridItemModel itemModel, String? versionId) async {
+    GridItemModel itemModel,
+    String? versionId,
+  ) async {
     currentVersionId = versionId;
 
     if (itemModel.inventoryItem?.versions
@@ -330,8 +397,17 @@ class AudioPlayerHandler extends BaseAudioHandler
         (mediaItem, position) => MediaState(mediaItem, position),
       ).asyncMap(
         (mediaState) async {
-          final additionalTime =
-              await calculateDurationBeforeIndex(player.currentIndex);
+          var version = currentGridItemModel?.inventoryItem?.versions
+              ?.where((i) => i.id == currentVersionId)
+              .firstOrNull;
+
+          Duration additionalTime = const Duration();
+
+          if (version?.parts != null) {
+            additionalTime =
+                await calculateDurationBeforeIndex(player.currentIndex);
+          }
+
           return MediaState(
               mediaState.mediaItem, mediaState.position + additionalTime);
         },
