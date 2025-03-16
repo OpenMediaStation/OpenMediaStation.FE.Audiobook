@@ -18,17 +18,17 @@ Future main(List<String> args) async {
     macOS: false, // default: false - dependency: media_kit_libs_macos_audio
   );
 
-  final session = await AudioSession.instance;
-  await session.configure(const AudioSessionConfiguration.music());
+  // final session = await AudioSession.instance;
+  // await session.configure(const AudioSessionConfiguration.music());
 
-  // Activate the audio session before playing audio.
-  if (await session.setActive(true)) {
-    log("message");
-    // Now play audio.
-  } else {
-    // The request was denied and the app should not play audio
-    log("message");
-  }
+  // // Activate the audio session before playing audio.
+  // if (await session.setActive(true)) {
+  //   log("message");
+  //   // Now play audio.
+  // } else {
+  //   // The request was denied and the app should not play audio
+  //   log("message");
+  // }
 
   Globals.audioPlayer = await AudioService.init(
     builder: () => AudioPlayerHandler(),

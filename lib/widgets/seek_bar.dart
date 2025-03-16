@@ -1,8 +1,6 @@
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
-import 'package:rxdart/rxdart.dart';
 
 class SeekBar extends StatelessWidget {
   const SeekBar({super.key});
@@ -10,7 +8,7 @@ class SeekBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<MediaState>(
-      stream: _mediaStateStream,
+      stream: Globals.audioPlayer.mediaStateStream,
       builder: (context, snapshot) {
         final mediaState = snapshot.data;
         final position = mediaState?.position ?? Duration.zero;
@@ -65,14 +63,6 @@ class SeekBar extends StatelessWidget {
       },
     );
   }
-
-  /// A stream reporting the combined state of the current media item and its
-  /// current position.
-  Stream<MediaState> get _mediaStateStream =>
-      Rx.combineLatest2<MediaItem?, Duration, MediaState>(
-          Globals.audioPlayer.mediaItem,
-          AudioService.position,
-          (mediaItem, position) => MediaState(mediaItem, position));
 
   /// Formats a [Duration] into `HH:mm:ss` format.
   String _formatDuration(Duration duration) {

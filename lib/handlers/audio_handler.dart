@@ -19,6 +19,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   StreamSubscription<MediaState>? _streamSubscription;
   MediaItem? _mediaItem;
   GridItemModel? currentGridItemModel;
+  String? currentVersionId;
   String? currentUrl;
 
   AudioPlayerHandler() {
@@ -71,6 +72,53 @@ class AudioPlayerHandler extends BaseAudioHandler
     mediaItem.add(_mediaItem);
   }
 
+  Future<Duration> calculateDuration() async {
+    var version = currentGridItemModel?.inventoryItem?.versions
+        ?.where((i) => i.id == currentVersionId)
+        .firstOrNull;
+
+    var calculatedDuration = const Duration();
+    for (var element in version!.parts!) {
+      var fileInfo = await FileInfoApi.getFileInfo(
+          currentGridItemModel!.inventoryItem!.category,
+          element.fileInfoId ?? "");
+      var extractedDuration =
+          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
+
+      if (extractedDuration != null) {
+        calculatedDuration += extractedDuration;
+      }
+    }
+
+    return calculatedDuration;
+  }
+
+  Future<Duration> calculateDurationBeforeIndex(int? index) async {
+    var version = currentGridItemModel?.inventoryItem?.versions
+        ?.where((i) => i.id == currentVersionId)
+        .firstOrNull;
+
+    var calculatedDuration = const Duration();
+
+    if (index == null) {
+      return calculatedDuration;
+    }
+
+    for (var i = 0; i < index; i++) {
+      var fileInfo = await FileInfoApi.getFileInfo(
+          currentGridItemModel!.inventoryItem!.category,
+          version!.parts![i].fileInfoId ?? "");
+      var extractedDuration =
+          fileInfo?.mediaData.duration ?? fileInfo?.mediaData.format?.duration;
+
+      if (extractedDuration != null) {
+        calculatedDuration += extractedDuration;
+      }
+    }
+
+    return calculatedDuration;
+  }
+
   Future<void> _playFromItemModel(
       GridItemModel? itemModel, String? versionId) async {
     var version = itemModel?.inventoryItem?.versions
@@ -120,7 +168,13 @@ class AudioPlayerHandler extends BaseAudioHandler
       audioSource = ConcatenatingAudioSource(children: sources);
     }
 
+    var calculatedDuration = await calculateDuration();
+
     var duration = await player.setAudioSource(audioSource);
+
+    if (version?.parts != null) {
+      duration = calculatedDuration;
+    }
 
     // if using media kit we are blind here...
     if (duration == const Duration(seconds: 0)) {
@@ -130,20 +184,6 @@ class AudioPlayerHandler extends BaseAudioHandler
             itemModel.inventoryItem!.versions?.first.fileInfoId ?? "");
         duration = fileInfo?.mediaData.duration ??
             fileInfo?.mediaData.format?.duration;
-      } else {
-        var calculatedDuration = const Duration(hours: 10);
-        // for (var element in version!.parts!) {
-        //   var fileInfo = await FileInfoApi.getFileInfo(
-        //       itemModel!.inventoryItem!.category, element.fileInfoId ?? "");
-        //   var extractedDuration = fileInfo?.mediaData.duration ??
-        //       fileInfo?.mediaData.format?.duration;
-
-        //   if (extractedDuration != null) {
-        //     calculatedDuration += extractedDuration;
-        //   }
-        // }
-
-        duration = calculatedDuration;
       }
     }
 
@@ -178,8 +218,10 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   Future<void> initializePlayer(
       GridItemModel itemModel, String? versionId) async {
+    currentVersionId = versionId;
+
     if (itemModel.inventoryItem?.versions
-            ?.where((i) => i.id == versionId)
+            ?.where((i) => i.id == currentVersionId)
             .firstOrNull
             ?.id ==
         _mediaItem?.id) {
@@ -188,7 +230,7 @@ class AudioPlayerHandler extends BaseAudioHandler
 
     currentGridItemModel = itemModel;
 
-    await _playFromItemModel(itemModel, versionId);
+    await _playFromItemModel(itemModel, currentVersionId);
 
     // Handle progress
     int? lastUpdatedSecond;
@@ -199,7 +241,7 @@ class AudioPlayerHandler extends BaseAudioHandler
       _streamSubscription!.cancel();
     }
 
-    _streamSubscription = _mediaStateStream.listen((mediaState) async {
+    _streamSubscription = mediaStateStream.listen((mediaState) async {
       var positionInSeconds = mediaState.position.inSeconds;
       var durationInSeconds = mediaState.mediaItem?.duration?.inSeconds ?? 0;
 
@@ -281,11 +323,19 @@ class AudioPlayerHandler extends BaseAudioHandler
     _sleepTimer?.cancel();
   }
 
-  Stream<MediaState> get _mediaStateStream =>
+  Stream<MediaState> get mediaStateStream =>
       Rx.combineLatest2<MediaItem?, Duration, MediaState>(
-          mediaItem,
-          AudioService.position,
-          (mediaItem, position) => MediaState(mediaItem, position));
+        mediaItem,
+        AudioService.position,
+        (mediaItem, position) => MediaState(mediaItem, position),
+      ).asyncMap(
+        (mediaState) async {
+          final additionalTime =
+              await calculateDurationBeforeIndex(player.currentIndex);
+          return MediaState(
+              mediaState.mediaItem, mediaState.position + additionalTime);
+        },
+      );
 
   /// Transform a just_audio event into an audio_service state.
   ///
