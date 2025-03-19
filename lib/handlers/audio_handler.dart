@@ -372,7 +372,7 @@ class AudioPlayerHandler extends BaseAudioHandler
       // }
     });
 
-    await player.seek(
+    await seek(
       Duration(seconds: itemModel.progress?.progressSeconds ?? 0),
     );
   }
