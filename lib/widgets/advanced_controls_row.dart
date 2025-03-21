@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:open_media_station_audiobook/globals.dart';
+import 'package:open_media_station_audiobook/widgets/create_bookmark_button.dart';
+import 'package:open_media_station_audiobook/widgets/edit_bookmark_button.dart';
+import 'package:open_media_station_base/apis/bookmarks_api.dart';
 import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/models/metadata/metadata_audiobook_chapter.dart';
 
@@ -24,7 +27,9 @@ class AdvancedControlsRow extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.bookmark_outline),
             iconSize: size,
-            onPressed: () async {},
+            onPressed: () async {
+              await _showBookmarkDialog(context);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.speed_outlined),
@@ -49,6 +54,80 @@ class AdvancedControlsRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future _showBookmarkDialog(BuildContext context) async {
+    var inventoryItemId = gridItemModel.inventoryItem?.id;
+
+    if (inventoryItemId == null) {
+      return;
+    }
+
+    var bookmarks = await BookmarksApi.listBookmarks(
+      "Audiobook",
+      inventoryItemId,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Bookmarks"),
+          content: SizedBox(
+            width: double.minPositive,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: bookmarks?.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text("${bookmarks![index].title}"),
+                      contentPadding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          EditBookmarkButton(
+                            gridItemModel: gridItemModel,
+                            bookmark: bookmarks[index],
+                          ),
+                          IconButton(
+                            onPressed: () async {
+                              if (bookmarks[index].id != null) {
+                                await BookmarksApi.removeBookmark(
+                                  bookmarks[index].id!,
+                                  inventoryItemId,
+                                  "Audiobook",
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.delete),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        if (bookmarks[index].positionInSeconds != null) {
+                          Globals.audioPlayer.seek(
+                            Duration(
+                              seconds: bookmarks[index].positionInSeconds!,
+                            ),
+                          );
+                        }
+
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+                CreateBookmarkButton(gridItemModel: gridItemModel),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
