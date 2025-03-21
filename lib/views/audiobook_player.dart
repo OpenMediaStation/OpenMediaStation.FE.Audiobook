@@ -29,7 +29,8 @@ class _AudiobookPlayerState extends State<AudiobookPlayer> {
   }
 
   Future<void> _initializePlayer() async {
-    await Globals.audioPlayer.initializePlayer(widget.itemModel, widget.versionID);
+    await Globals.audioPlayer
+        .initializePlayer(widget.itemModel, widget.versionID);
   }
 
   @override
@@ -41,14 +42,16 @@ class _AudiobookPlayerState extends State<AudiobookPlayer> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: const Column(
+      body: Column(
         children: [
-          PlayerContentInformation(),
-          Spacer(),
-          SeekBar(),
-          PlayerControlRow(),
-          AdvancedControlsRow(),
-          SizedBox(height: 20),
+          const PlayerContentInformation(),
+          const Spacer(),
+          const SeekBar(),
+          const PlayerControlRow(),
+          AdvancedControlsRow(
+            gridItemModel: widget.itemModel,
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );

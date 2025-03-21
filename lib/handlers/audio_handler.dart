@@ -104,7 +104,7 @@ class AudioPlayerHandler extends BaseAudioHandler
     return calculatedDuration;
   }
 
-  Future<Duration> calculateDurationBeforeIndex(int? index) async {
+  Duration calculateDurationBeforeIndex(int? index) {
     var version = currentGridItemModel?.inventoryItem?.versions
         ?.where((i) => i.id == currentVersionId)
         .firstOrNull;
@@ -246,7 +246,7 @@ class AudioPlayerHandler extends BaseAudioHandler
     _mediaItem = MediaItem(
       id: version?.id ?? "unknown",
       title: itemModel?.metadataModel?.title ?? "Unknown title",
-      artist: itemModel?.metadataModel?.audiobook?.authors?.first ??
+      artist: itemModel?.metadataModel?.audiobook?.authors?.firstOrNull ??
           "Unknown author",
       duration: duration,
       artUri: Uri.parse(itemModel?.image ?? Globals.PictureNotFoundUrl),
@@ -404,8 +404,7 @@ class AudioPlayerHandler extends BaseAudioHandler
           Duration additionalTime = const Duration();
 
           if (version?.parts != null) {
-            additionalTime =
-                await calculateDurationBeforeIndex(player.currentIndex);
+            additionalTime = calculateDurationBeforeIndex(player.currentIndex);
           }
 
           return MediaState(
