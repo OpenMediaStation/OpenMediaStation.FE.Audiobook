@@ -50,5 +50,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We are not using the Microphone for any of our functionalities.</string>
 </dict>
 </plist>
