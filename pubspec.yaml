@@ -12,20 +12,20 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   icons_plus: ^5.0.0
-  just_audio: ^0.9.46
+  just_audio: ^0.10.4
   just_audio_media_kit: ^2.0.0
   media_kit_libs_linux: any
   media_kit_libs_windows_audio: any
   audio_service: ^0.18.17
-  audio_session: ^0.1.25
-  open_media_station_base: ^0.1.5
-    # path: ../open_media_station_base
+  audio_session: ^0.2.2
+  open_media_station_base: ^0.1.8
+    #path: ../open_media_station_base
   rxdart: ^0.28.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   msix: ^3.16.8
 
 flutter:
