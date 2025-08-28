@@ -18,9 +18,10 @@ dependencies:
   media_kit_libs_windows_audio: any
   audio_service: ^0.18.17
   audio_session: ^0.2.2
-  open_media_station_base: ^0.1.9
-    #path: ../open_media_station_base
+  open_media_station_base: ^0.1.10
+    # path: ../open_media_station_base
   rxdart: ^0.28.0
+  logger: ^2.6.1
 
 dev_dependencies:
   flutter_test:

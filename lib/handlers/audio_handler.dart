@@ -3,6 +3,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_media_station_audiobook/globals.dart';
 import 'package:open_media_station_audiobook/models/internal/media_state.dart';
+import 'package:open_media_station_base/globals/logging.dart';
 import 'package:open_media_station_base/models/internal/grid_item_model.dart';
 import 'package:open_media_station_base/open_media_station_base.dart';
 import 'package:rxdart/rxdart.dart';
@@ -53,6 +54,8 @@ class AudioPlayerHandler extends BaseAudioHandler
 
   Future<void> _playFromUri(Uri uri, GridItemModel? itemModel,
       [Map<String, dynamic>? extras]) async {
+    Logging.logger.d("Playing Uri: $uri");
+    
     var duration = await player.setAudioSource(
       AudioSource.uri(
         uri,
@@ -172,6 +175,8 @@ class AudioPlayerHandler extends BaseAudioHandler
       String url =
           "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel?.inventoryItem?.category}/${itemModel?.inventoryItem?.id}${versionId != null ? "?versionId=$versionId" : ""}";
 
+      Logging.logger.d("PlayBackUrl: $url");
+
       audioSource = AudioSource.uri(
         Uri.parse(url),
         headers: BaseApi.getHeaders(),
@@ -205,6 +210,8 @@ class AudioPlayerHandler extends BaseAudioHandler
       for (var element in version.parts!) {
         String url =
             "${Preferences.prefs?.getString("BaseUrl")}/stream/${itemModel?.inventoryItem?.category}/${itemModel?.inventoryItem?.id}?partId=${element.id}${versionId != null ? "&versionId=$versionId" : ""}";
+
+        Logging.logger.d("PlayBackUrl: $url");
 
         sources.add(
           AudioSource.uri(
