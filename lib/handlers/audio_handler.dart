@@ -55,7 +55,7 @@ class AudioPlayerHandler extends BaseAudioHandler
   Future<void> _playFromUri(Uri uri, GridItemModel? itemModel,
       [Map<String, dynamic>? extras]) async {
     Logging.logger.d("Playing Uri: $uri");
-    
+
     var duration = await player.setAudioSource(
       AudioSource.uri(
         uri,
@@ -169,7 +169,8 @@ class AudioPlayerHandler extends BaseAudioHandler
         ?.where((i) => i.id == versionId)
         .firstOrNull;
 
-    AudioSource audioSource;
+    AudioSource? audioSource;
+    List<AudioSource>? audioSources;
 
     if (version?.parts == null) {
       String url =
@@ -182,6 +183,8 @@ class AudioPlayerHandler extends BaseAudioHandler
         headers: BaseApi.getHeaders(),
       );
     } else {
+      audioSource = null;
+
       version?.parts?.sort(
         (i1, i2) {
           int primaryComparison =
@@ -205,7 +208,7 @@ class AudioPlayerHandler extends BaseAudioHandler
         fileInfosForCurrentParts.add(fileInfo!);
       }
 
-      List<AudioSource> sources = [];
+      audioSources = [];
 
       for (var element in version.parts!) {
         String url =
@@ -213,15 +216,13 @@ class AudioPlayerHandler extends BaseAudioHandler
 
         Logging.logger.d("PlayBackUrl: $url");
 
-        sources.add(
+        audioSources.add(
           AudioSource.uri(
             Uri.parse(url),
             headers: BaseApi.getHeaders(),
           ),
         );
       }
-
-      audioSource = ConcatenatingAudioSource(children: sources);
     }
 
     Duration? duration;
@@ -231,7 +232,13 @@ class AudioPlayerHandler extends BaseAudioHandler
       duration = calculatedDuration;
     }
 
-    var tempDuration = await player.setAudioSource(audioSource);
+    Duration? tempDuration;
+
+    if (audioSource != null) {
+      tempDuration = await player.setAudioSource(audioSource);
+    } else if (audioSources != null) {
+      tempDuration = await player.setAudioSources(audioSources);
+    }
 
     if (tempDuration != null &&
         tempDuration != const Duration() &&
